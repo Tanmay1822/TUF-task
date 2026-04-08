@@ -46,8 +46,8 @@ body {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: #0a0f1a;
-  transition: background 0.7s ease;
+  background: var(--bg-color, #0a0f1a);
+  transition: background-color 0.7s ease, --accent 0.7s ease;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -72,6 +72,7 @@ body {
   height: 100%;
   object-fit: cover;
   transition: opacity 0.7s ease;
+  will-change: opacity;
 }
 
 .hero-gradient {
@@ -95,13 +96,14 @@ body {
 
 .hero-year {
   font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.4em;
-  opacity: 0.55;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 6px;
+  opacity: 0.65;
   color: white;
   margin-bottom: 8px;
   text-transform: uppercase;
+  display: block;
 }
 
 .hero-month {
@@ -110,14 +112,15 @@ body {
   font-weight: 700;
   color: white;
   line-height: 1;
-  text-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  text-shadow: 0 4px 32px rgba(0,0,0,0.35);
+  letter-spacing: -1px;
 }
 
 .hero-line {
-  width: 60px;
+  width: 48px;
   height: 1px;
   background: rgba(255,255,255,0.4);
-  margin: 16px auto 0;
+  margin: 18px auto 0 auto;
 }
 
 /* ── Particle Canvas ─────────────────────────────────────── */
@@ -126,12 +129,13 @@ body {
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  will-change: contents;
 }
 
 /* ── Scroll Hint ─────────────────────────────────────────── */
-@keyframes bounceDown {
+@keyframes bounce {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(7px); }
+  50%      { transform: translateY(5px); }
 }
 
 .scroll-hint {
@@ -145,18 +149,18 @@ body {
   align-items: center;
   gap: 4px;
   color: white;
-  opacity: 0.5;
-  font-size: 11px;
+  opacity: 0.4;
+  font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0.15em;
+  letter-spacing: 4px;
   text-transform: uppercase;
-  animation: bounceDown 2.5s ease-in-out infinite;
   pointer-events: none;
 }
 
 .scroll-hint-arrow {
   font-size: 16px;
   line-height: 1;
+  animation: bounce 1.8s ease infinite;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -165,15 +169,21 @@ body {
 
 .calendar-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 15, 25, 0.72);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 20px;
-  padding: 24px;
-  margin: -40px 24px 120px 24px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
-  z-index: 4;
+  padding: 32px 24px 24px 24px;
+  margin-top: -52px;
+  margin-left: 24px;
+  margin-right: 24px;
+  margin-bottom: 120px;
+  box-shadow: 
+    0 2px 0 rgba(255,255,255,0.05) inset,
+    0 24px 64px rgba(0,0,0,0.45);
+  z-index: 10;
+  will-change: transform;
 }
 
 /* ── Day Headers ─────────────────────────────────────────── */
@@ -187,14 +197,16 @@ body {
   text-align: center;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 8px 0;
-  color: rgba(255, 255, 255, 0.45);
+  padding: 8px 0 12px 0;
+  color: rgba(255, 255, 255, 0.38);
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  margin-bottom: 8px;
 }
 
 .day-header.weekend {
-  /* color set dynamically via theme.textAccent */
+  color: var(--text-accent);
 }
 
 /* ── Days Grid ───────────────────────────────────────────── */
@@ -207,31 +219,28 @@ body {
 /* ── Day Cell ────────────────────────────────────────────── */
 .day-cell {
   position: relative;
-  min-height: 80px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 88px;
+  border: 0.5px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.18s ease, border-color 0.18s ease;
   padding: 8px;
   display: flex;
   flex-direction: column;
 }
 
 .day-cell:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .day-cell.in-range {
-  /* background set dynamically via theme.accentLight */
+  background: var(--accent-light);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.day-cell.range-start {
-  /* right half range tint — set via inline style */
-}
-
-.day-cell.range-end {
-  /* left half range tint — set via inline style */
+.day-cell.range-start, .day-cell.range-end {
+  /* Dynamic gradients are handled inline in React */
 }
 
 .day-cell.hover-preview {
@@ -240,41 +249,47 @@ body {
 }
 
 .day-cell.weekend-col {
-  /* background set dynamically via theme.weekendTint */
+  background-color: var(--weekend-tint);
 }
 
 /* ── Day Number ──────────────────────────────────────────── */
 .day-number {
+  position: absolute;
+  top: 8px;
+  left: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.88);
   line-height: 1;
   width: fit-content;
 }
 
 .day-number.adjacent {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.22);
 }
 
 .day-number.weekend-text {
-  /* color set dynamically via theme.textAccent */
+  color: var(--text-accent);
 }
 
 .day-number.today-circle,
 .day-number.selected-circle {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-weight: 600;
-  /* background set dynamically via theme.todayBg */
+  background: var(--today-bg);
+  box-shadow: 0 0 16px var(--accent-light);
+  font-size: 13px;
+  transform: translate(-4px, -4px); /* visually center within the cell corner considering the padding */
 }
 
 .day-number.in-range-text {
-  /* color set dynamically via theme.textAccent */
+  color: var(--text-accent);
 }
 
 /* ── Holiday Dot ─────────────────────────────────────────── */
@@ -291,15 +306,29 @@ body {
 
 /* ── Note Indicator ──────────────────────────────────────── */
 .note-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
   background: white;
-  opacity: 0.7;
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
+  opacity: 0.5;
   z-index: 3;
+}
+
+/* ── Holiday Label ─────────────────────────────────────── */
+.holiday-name {
+  position: absolute;
+  bottom: 10px;
+  left: 8px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Holiday Tooltip ─────────────────────────────────────── */
@@ -450,10 +479,10 @@ body {
 
 .nav-month-label {
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 300;
+  color: var(--text-accent);
   white-space: nowrap;
   padding: 0 4px;
-  /* color set dynamically via theme.textAccent */
 }
 
 .export-btn {
@@ -535,7 +564,7 @@ body {
   height: 32px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  border: none;
+  border: 0.5px solid rgba(255,255,255,0.15);
   color: white;
   font-size: 16px;
   cursor: pointer;
@@ -550,11 +579,22 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* ── Drawer Top Border ───────────────────────────────────── */
+.drawer-top-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent);
+}
+
 /* ── Drawer Date Header ──────────────────────────────────── */
 .drawer-date-header {
   margin-bottom: 24px;
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 20px;
 }
 
 .drawer-day-number {
@@ -567,9 +607,11 @@ body {
 
 .drawer-day-name {
   font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
   margin-top: 4px;
-  /* color set dynamically via theme.textAccent */
+  color: var(--text-accent);
 }
 
 /* ── Drawer Sections ─────────────────────────────────────── */
@@ -584,28 +626,28 @@ body {
   text-transform: uppercase;
   opacity: 0.7;
   margin-bottom: 10px;
-  /* color set dynamically via theme.textAccent */
+  color: var(--text-accent);
 }
 
 /* ── Drawer Textarea ─────────────────────────────────────── */
 .drawer-textarea {
   width: 100%;
-  min-height: 120px;
-  resize: vertical;
+  min-height: 110px;
+  resize: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  padding: 12px;
+  padding: 12px 14px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   color: white;
   outline: none;
-  transition: border-color 0.25s;
+  transition: border-color 0.2s;
   line-height: 1.6;
 }
 
 .drawer-textarea:focus {
-  /* border-color set dynamically via theme.accent */
+  border-color: var(--accent);
 }
 
 .drawer-textarea::placeholder {
@@ -621,22 +663,24 @@ body {
 
 .tag-pill {
   font-size: 11px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 20px;
-  border: none;
+  border: 0.5px solid rgba(255,255,255,0.12);
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'DM Sans', sans-serif;
 }
 
 .tag-pill.unselected {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
   color: rgba(255, 255, 255, 0.5);
 }
 
 .tag-pill.selected {
   color: white;
-  /* background set dynamically via theme.accent */
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 500;
 }
 
 /* ── Reminder Inputs ─────────────────────────────────────── */
@@ -672,8 +716,8 @@ body {
 
 .reminder-set-btn {
   width: 100%;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   border: none;
   color: white;
   font-size: 13px;
@@ -681,11 +725,11 @@ body {
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: opacity 0.2s;
-  /* background set dynamically via theme.accent */
+  background: var(--accent);
 }
 
 .reminder-set-btn:hover {
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 /* ── Saved Reminders List ────────────────────────────────── */
@@ -725,22 +769,31 @@ body {
 }
 
 /* ── Drawer Save Button (sticky bottom) ──────────────────── */
+.drawer-save-wrapper {
+  position: sticky;
+  bottom: 0;
+  background: rgba(10,15,25,0.9);
+  padding-top: 16px;
+  margin-top: auto;
+  z-index: 10;
+}
+
 .drawer-save-btn {
   width: 100%;
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   background: transparent;
   font-size: 13px;
   font-weight: 600;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: auto;
-  /* border & color set dynamically via theme.accent */
+  border: 1px solid var(--accent);
+  color: var(--accent);
 }
 
 .drawer-save-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05); /* or var(--accent-light) wait prompt says rgba(theme.accent, 0.1) but it's simpler via CSS var or keeping what's there */
 }
 
 .drawer-save-btn.saved {

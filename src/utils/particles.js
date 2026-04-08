@@ -3,12 +3,11 @@
  * Supports: snow · petals · powder · leaves · sparkle · rain ·
  *           bubbles · mist · flags · rays
  * No external libraries — pure requestAnimationFrame rendering.
- * Pauses when tab is not visible (visibility API).
  */
 
 const CONFIGS = {
   snow: {
-    count: 60,
+    count: 30, // was 60
     colors: ['rgba(255,255,255,', 'rgba(200,220,255,'],
     minSize: 1.5, maxSize: 3,
     minSpeed: 0.3, maxSpeed: 1.0,
@@ -16,16 +15,18 @@ const CONFIGS = {
     opacity: [0.3, 0.6],
   },
   petals: {
-    count: 30,
-    colors: ['rgba(255,105,135,', 'rgba(255,182,193,', 'rgba(255,140,160,'],
-    minSize: 4, maxSize: 9,
+    count: 15, // was 30
+    // Petals for April
+    colors: ['rgba(255,183,197,', 'rgba(255,200,212,'], // #FFB7C5, #FFC8D4
+    minSize: 3, maxSize: 3, // Petals use fixed sizes in draw, this drives scaling
     minSpeed: 0.4, maxSpeed: 1.2,
     drift: 1.2,
-    opacity: [0.35, 0.7],
+    opacity: [0.75, 0.75], // Opacity 0.75
     rotate: true,
+    petalShape: true,
   },
   powder: {
-    count: 80,
+    count: 40, // was 80
     colors: [
       'rgba(255,100,50,', 'rgba(50,200,100,', 'rgba(255,210,0,',
       'rgba(150,50,255,', 'rgba(0,180,255,', 'rgba(255,50,150,',
@@ -37,16 +38,17 @@ const CONFIGS = {
     burst: true,
   },
   leaves: {
-    count: 25,
-    colors: ['rgba(100,180,60,', 'rgba(180,140,50,', 'rgba(160,90,20,', 'rgba(200,160,60,'],
-    minSize: 5, maxSize: 11,
+    count: 12, // was 25
+    colors: ['rgba(144,238,144,', 'rgba(255,179,71,'], // #90EE90 alternating #FFB347
+    minSize: 4, maxSize: 8,
     minSpeed: 0.4, maxSpeed: 1.4,
     drift: 1.6,
     opacity: [0.45, 0.85],
     rotate: true,
+    leafShape: true,
   },
   sparkle: {
-    count: 40,
+    count: 20, // was 40
     colors: ['rgba(255,215,0,', 'rgba(255,255,200,', 'rgba(255,200,100,'],
     minSize: 1, maxSize: 3.5,
     minSpeed: -0.15, maxSpeed: -0.05,
@@ -56,7 +58,7 @@ const CONFIGS = {
     star: true,
   },
   rain: {
-    count: 100,
+    count: 50, // was 100
     colors: ['rgba(150,180,210,'],
     minSize: 0.8, maxSize: 1.5,
     minSpeed: 7, maxSpeed: 13,
@@ -65,7 +67,7 @@ const CONFIGS = {
     streaks: true,
   },
   bubbles: {
-    count: 20,
+    count: 10, // was 20
     colors: ['rgba(100,180,255,', 'rgba(150,200,255,'],
     minSize: 4, maxSize: 12,
     minSpeed: -0.5, maxSpeed: -0.15,
@@ -74,7 +76,7 @@ const CONFIGS = {
     strokeOnly: true,
   },
   mist: {
-    count: 8,
+    count: 6, // was 10/8
     colors: ['rgba(200,200,220,'],
     minSize: 40, maxSize: 80,
     minSpeed: 0, maxSpeed: 0.05,
@@ -83,7 +85,7 @@ const CONFIGS = {
     blur: true,
   },
   flags: {
-    count: 3,
+    count: 3, // unchanged
     colors: ['rgba(255,153,51,', 'rgba(255,255,255,', 'rgba(19,136,8,'],
     minSize: 8, maxSize: 14,
     minSpeed: 0, maxSpeed: 0,
@@ -92,7 +94,7 @@ const CONFIGS = {
     flag: true,
   },
   rays: {
-    count: 8,
+    count: 6, // was 8
     colors: ['rgba(255,215,100,'],
     minSize: 2, maxSize: 3,
     minSpeed: 0, maxSpeed: 0,
@@ -107,7 +109,6 @@ function spawn(w, h, cfg, index) {
   const { minSize, maxSize, minSpeed, maxSpeed, drift, opacity, colors, twinkle, flag, radial } = cfg;
 
   if (flag) {
-    // Position flags across top of canvas
     return {
       x: w * 0.2 + (index * w * 0.3),
       y: 30 + index * 15,
@@ -161,176 +162,143 @@ function spawn(w, h, cfg, index) {
   };
 }
 
-/**
- * Create and return a particle system controller for the given canvas.
- * @param {HTMLCanvasElement} canvas
- * @param {string} type - Particle type key
- * @returns {{ start, stop, resize, destroy }} Controller object
- */
-export function createParticleSystem(canvas, type) {
+export function initParticles(canvas, type) {
   const cfg = CONFIGS[type];
-  if (!cfg) return null;
-
-  const ctx = canvas.getContext('2d');
-  let w = canvas.width;
-  let h = canvas.height;
+  if (!cfg) return { particles: [], cfg: null };
   const particles = [];
-
   for (let i = 0; i < cfg.count; i++) {
-    particles.push(spawn(w, h, cfg, i));
+    particles.push(spawn(canvas.width, canvas.height, cfg, i));
   }
+  return { particles, cfg };
+}
 
-  let raf = null;
-  let running = false;
+export function updateAndDrawParticles(canvas, ctx, cfg, particles) {
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
 
-  // Visibility API: pause when tab hidden
-  const onVisChange = () => {
-    if (document.hidden) {
-      if (raf) { cancelAnimationFrame(raf); raf = null; }
-    } else if (running) {
-      raf = requestAnimationFrame(draw);
-    }
-  };
-  document.addEventListener('visibilitychange', onVisChange);
-
-  function draw() {
-    ctx.clearRect(0, 0, w, h);
-
-    for (const p of particles) {
-      // ── Physics ──
-      if (cfg.flag) {
-        // Waving flag effect
-        p.phase += p.phaseSpeed;
-        p.rotation = Math.sin(p.phase) * 0.15;
-      } else if (cfg.radial) {
-        // Rotating rays
-        p.rotation += p.rotSpeed;
-        p.phase += p.phaseSpeed;
-        p.opacity = cfg.opacity[0] + Math.abs(Math.sin(p.phase)) * (cfg.opacity[1] - cfg.opacity[0]);
-      } else if (cfg.twinkle) {
-        p.sway += p.swaySpeed;
-        p.x += Math.sin(p.sway) * 0.4 + p.drift * 0.05;
-        p.y += p.speed;
-        p.phase += p.phaseSpeed;
-        p.opacity = Math.abs(Math.sin(p.phase)) * 0.65 + 0.15;
-      } else {
-        p.sway += p.swaySpeed;
-        p.x += p.drift + Math.sin(p.sway) * 0.5;
-        p.y += p.speed;
-      }
-
-      if (cfg.rotate) p.rotation += p.rotSpeed;
-
-      // ── Wrap ──
-      if (!cfg.flag && !cfg.radial) {
-        if (p.speed > 0 && p.y > h + 20) { p.y = -20; p.x = Math.random() * w; }
-        if (p.speed < 0 && p.y < -20) { p.y = h + 20; p.x = Math.random() * w; }
-        if (p.x > w + 20) p.x = -20;
-        if (p.x < -20) p.x = w + 20;
-      }
-
-      // ── Render ──
-      ctx.save();
-      ctx.globalAlpha = p.opacity;
-
-      if (cfg.radial) {
-        // Radial rays from top center
-        const len = Math.max(w, h) * 1.5;
-        ctx.translate(w / 2, 0);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color + `${p.opacity})`;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-p.size, len);
-        ctx.lineTo(p.size, len);
-        ctx.closePath();
-        ctx.fill();
-      } else if (cfg.flag) {
-        // Tiny waving rectangles
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color + `${p.opacity})`;
-        ctx.fillRect(-p.size, -p.size * 0.6, p.size * 2, p.size * 1.2);
-      } else if (cfg.strokeOnly) {
-        // Bubbles: unfilled circles
-        ctx.strokeStyle = p.color + `${p.opacity})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if (cfg.blur) {
-        // Mist: large blurred circles
-        ctx.filter = `blur(${p.size * 0.4}px)`;
-        ctx.fillStyle = p.color + `${p.opacity})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.filter = 'none';
-      } else if (cfg.star) {
-        // Four-pointed star sparkle (✦)
-        ctx.fillStyle = p.color + `${p.opacity})`;
-        ctx.translate(p.x, p.y);
-        ctx.beginPath();
-        const s = p.size * 2;
-        const inner = s * 0.3;
-        for (let i = 0; i < 4; i++) {
-          const angle = (i * Math.PI) / 2;
-          ctx.lineTo(Math.cos(angle) * s, Math.sin(angle) * s);
-          const midAngle = angle + Math.PI / 4;
-          ctx.lineTo(Math.cos(midAngle) * inner, Math.sin(midAngle) * inner);
-        }
-        ctx.closePath();
-        ctx.fill();
-      } else if (cfg.streaks) {
-        // Rain: thin angled lines
-        ctx.strokeStyle = p.color + `${p.opacity})`;
-        ctx.lineWidth = p.size;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x + p.drift * 0.3, p.y + p.speed * 2.5);
-        ctx.stroke();
-      } else if (cfg.rotate) {
-        // Petals / leaves: rotated ellipses
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color + `${p.opacity})`;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Default circles: snow, powder
-        ctx.fillStyle = p.color + `${p.opacity})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
+  for (const p of particles) {
+    if (cfg.flag) {
+      p.phase += p.phaseSpeed;
+      p.rotation = Math.sin(p.phase) * 0.15;
+    } else if (cfg.radial) {
+      p.rotation += p.rotSpeed;
+      p.phase += p.phaseSpeed;
+      p.opacity = cfg.opacity[0] + Math.abs(Math.sin(p.phase)) * (cfg.opacity[1] - cfg.opacity[0]);
+    } else if (cfg.twinkle) {
+      p.sway += p.swaySpeed;
+      p.x += Math.sin(p.sway) * 0.4 + p.drift * 0.05;
+      p.y += p.speed;
+      p.phase += p.phaseSpeed;
+      p.opacity = Math.abs(Math.sin(p.phase)) * 0.65 + 0.15;
+    } else if (cfg.petalShape) {
+      p.sway += p.swaySpeed;
+      p.x += p.drift + Math.sin(p.sway) * 1.5; // sin wave on X
+      p.y += p.speed;
+      p.rotation += 0.02; // changes slowly per frame
+    } else {
+      p.sway += p.swaySpeed;
+      p.x += p.drift + Math.sin(p.sway) * 0.5;
+      p.y += p.speed;
     }
 
-    if (running && !document.hidden) {
-      raf = requestAnimationFrame(draw);
+    if (cfg.rotate && !cfg.petalShape) {
+      p.rotation += p.rotSpeed;
     }
+
+    // wrap
+    if (!cfg.flag && !cfg.radial) {
+      if (p.speed > 0 && p.y > h + 20) { p.y = -20; p.x = Math.random() * w; }
+      if (p.speed < 0 && p.y < -20) { p.y = h + 20; p.x = Math.random() * w; }
+      if (p.x > w + 20) p.x = -20;
+      if (p.x < -20) p.x = w + 20;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = p.opacity;
+
+    if (cfg.radial) {
+      const len = Math.max(w, h) * 1.5;
+      ctx.translate(w / 2, 0);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-p.size, len);
+      ctx.lineTo(p.size, len);
+      ctx.closePath();
+      ctx.fill();
+    } else if (cfg.flag) {
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.fillRect(-p.size, -p.size * 0.6, p.size * 2, p.size * 1.2);
+    } else if (cfg.strokeOnly) {
+      ctx.strokeStyle = p.color + `${p.opacity})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (cfg.blur) {
+      ctx.filter = `blur(${p.size * 0.4}px)`;
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.filter = 'none';
+    } else if (cfg.star) {
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.translate(p.x, p.y);
+      ctx.beginPath();
+      const s = p.size * 2;
+      const inner = s * 0.3;
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI) / 2;
+        ctx.lineTo(Math.cos(angle) * s, Math.sin(angle) * s);
+        const midAngle = angle + Math.PI / 4;
+        ctx.lineTo(Math.cos(midAngle) * inner, Math.sin(midAngle) * inner);
+      }
+      ctx.closePath();
+      ctx.fill();
+    } else if (cfg.streaks) {
+      ctx.strokeStyle = p.color + `${p.opacity})`;
+      ctx.lineWidth = p.size;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + p.drift * 0.3, p.y + p.speed * 2.5);
+      ctx.stroke();
+    } else if (cfg.petalShape) {
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.beginPath();
+      // ellipse, width: 6px, height: 3px
+      ctx.ellipse(0, 0, 3, 1.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (cfg.leafShape) {
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.beginPath();
+      // rounded triangle approximated with arc
+      ctx.arc(0, 0, p.size, 0, Math.PI * 1.5);
+      ctx.lineTo(p.size * 1.2, p.size * 1.2);
+      ctx.closePath();
+      ctx.fill();
+    } else if (cfg.rotate) {
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = p.color + `${p.opacity})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
-
-  return {
-    start() {
-      if (running) return;
-      running = true;
-      draw();
-    },
-    stop() {
-      running = false;
-      if (raf) { cancelAnimationFrame(raf); raf = null; }
-    },
-    resize(nw, nh) {
-      w = nw;
-      h = nh;
-    },
-    destroy() {
-      this.stop();
-      document.removeEventListener('visibilitychange', onVisChange);
-      ctx.clearRect(0, 0, w, h);
-    },
-  };
 }

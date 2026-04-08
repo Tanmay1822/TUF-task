@@ -162,21 +162,27 @@ export default function WallCalendar() {
       raf = requestAnimationFrame(animate);
     };
 
-    const onWheel = (e) => {
-      e.preventDefault();
+    let ticking = false;
+    const handleScroll = (e) => {
+      e.preventDefault(); // Stop native page scrolling from conflicting with the fold
       if (folding) return;
 
       accDelta.current += e.deltaY;
-
       clearTimeout(decayTimer.current);
       decayTimer.current = setTimeout(() => {
         accDelta.current = 0;
       }, 200);
 
-      if (accDelta.current > threshold) {
-        animateFold(1); // next
-      } else if (accDelta.current < -threshold) {
-        animateFold(-1); // prev
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          if (accDelta.current > threshold) {
+            animateFold(1); // next
+          } else if (accDelta.current < -threshold) {
+            animateFold(-1); // prev
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -188,18 +194,24 @@ export default function WallCalendar() {
       if (folding) return;
       const dy = touchY - e.changedTouches[0].clientY;
       if (Math.abs(dy) > 80) {
-        animateFold(dy > 0 ? 1 : -1);
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            animateFold(dy > 0 ? 1 : -1);
+            ticking = false;
+          });
+          ticking = true;
+        }
       }
     };
 
-    el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('wheel', handleScroll, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
-      el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('wheel', handleScroll);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
       clearTimeout(decayTimer.current);
       if (raf) cancelAnimationFrame(raf);
     };

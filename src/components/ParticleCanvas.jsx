@@ -1,5 +1,5 @@
 import { useRef, useEffect, memo } from 'react';
-import { createParticleSystem } from '../utils/particles';
+import { initParticles, updateAndDrawParticles } from '../utils/particles';
 
 /**
  * ParticleCanvas — lightweight canvas overlay rendering themed particles.
@@ -8,7 +8,6 @@ import { createParticleSystem } from '../utils/particles';
  */
 const ParticleCanvas = memo(function ParticleCanvas({ type }) {
   const canvasRef = useRef(null);
-  const systemRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,28 +16,47 @@ const ParticleCanvas = memo(function ParticleCanvas({ type }) {
     // Respect reduced motion
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+    let rafId = null;
+    const ctx = canvas.getContext('2d');
+    
+    // Resize handler
     const handleResize = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
-      if (systemRef.current) {
-        systemRef.current.resize(rect.width, rect.height);
-      }
     };
-
+    
     handleResize();
 
-    const system = createParticleSystem(canvas, type);
-    systemRef.current = system;
-    if (system) system.start();
+    const { particles, cfg } = initParticles(canvas, type);
+
+    const animate = () => {
+      if (cfg) {
+        updateAndDrawParticles(canvas, ctx, cfg, particles);
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+
+    if (cfg) {
+      rafId = requestAnimationFrame(animate);
+    }
 
     const observer = new ResizeObserver(handleResize);
     observer.observe(canvas);
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (rafId) cancelAnimationFrame(rafId);
+      } else {
+        if (cfg) rafId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       observer.disconnect();
-      if (system) system.destroy();
-      systemRef.current = null;
+      if (rafId) cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [type]);
 

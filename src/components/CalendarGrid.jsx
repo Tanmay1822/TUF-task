@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect, memo } from 'react';
+import { useMemo, useState, useCallback, useEffect, memo, useRef } from 'react';
 import { buildCalendarGrid, toDateKey, DAY_NAMES } from '../utils/calendar';
 import DayCell from './DayCell';
 
@@ -18,7 +18,7 @@ const CalendarGrid = memo(function CalendarGrid({
 }) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [hoveredDate, setHoveredDate] = useState(null);
+  const hoveredDate = useRef(null);
   const [noteDates, setNoteDates] = useState(new Set());
 
   const today = new Date();
@@ -72,6 +72,11 @@ const CalendarGrid = memo(function CalendarGrid({
       setStartDate((prev) => {
         if (!prev || endDate) {
           setEndDate(null);
+          hoveredDate.current = null;
+          // Clean up any remaining hover classes
+          document.querySelectorAll('.day-cell.hover-preview').forEach(el => {
+            el.classList.remove('hover-preview');
+          });
           return key;
         }
         if (key === prev) {
@@ -91,7 +96,28 @@ const CalendarGrid = memo(function CalendarGrid({
 
   const handleDayHover = useCallback(
     (key) => {
-      if (startDate && !endDate) setHoveredDate(key);
+      if (startDate && !endDate) {
+        hoveredDate.current = key;
+        document.querySelectorAll('.day-cell').forEach(el => {
+          if (el.dataset.datekey === key) {
+            el.classList.add('hover-preview');
+          } else {
+            el.classList.remove('hover-preview');
+          }
+        });
+      }
+    },
+    [startDate, endDate],
+  );
+
+  const handleDayLeave = useCallback(
+    (key) => {
+      if (startDate && !endDate && hoveredDate.current === key) {
+        hoveredDate.current = null;
+        document.querySelectorAll('.day-cell.hover-preview').forEach(el => {
+          el.classList.remove('hover-preview');
+        });
+      }
     },
     [startDate, endDate],
   );
@@ -120,12 +146,12 @@ const CalendarGrid = memo(function CalendarGrid({
             dayObj={dayObj}
             startDate={startDate}
             endDate={endDate}
-            hoveredDate={hoveredDate}
             todayKey={todayKey}
             theme={theme}
             hasNote={noteDates.has(toDateKey(dayObj.year, dayObj.month, dayObj.day))}
             onDayClick={handleDayClick}
             onDayHover={handleDayHover}
+            onDayLeave={handleDayLeave}
           />
         ))}
       </div>

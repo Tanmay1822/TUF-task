@@ -29,7 +29,17 @@ const MonthCard = memo(function MonthCard({
   const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
-    <div ref={ref} className="calendar-root">
+    <div 
+      ref={ref} 
+      className="calendar-root"
+      style={{
+        '--accent': theme.accent,
+        '--accent-light': theme.accentLight,
+        '--text-accent': theme.textAccent,
+        '--weekend-tint': theme.weekendTint,
+        '--today-bg': theme.todayBg
+      }}
+    >
       {/* ═══ HERO SECTION ═══ */}
       <section className="hero-section">
         {/* Background Image */}

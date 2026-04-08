@@ -8,22 +8,22 @@ import { HOLIDAYS, HOLIDAY_TYPE_COLORS } from '../data/holidays';
  *   - Top-left date number positioning
  *   - Today/selected filled circle (theme.todayBg)
  *   - Range selection with half-cell tinting
- *   - Holiday dots colored by type
+ *   - Holiday dots & text
  *   - Note indicator dot
  *   - Weekend column tinting
- *   - Hover preview dashed border during range selection
+ *   - Hover preview handled via external DOM toggle (class 'hover-preview')
  */
 const DayCell = memo(function DayCell({
   dayObj,
   index,
   startDate,
   endDate,
-  hoveredDate,
   todayKey,
   theme,
   hasNote,
   onDayClick,
   onDayHover,
+  onDayLeave,
 }) {
   const key = toDateKey(dayObj.year, dayObj.month, dayObj.day);
   const holidayKey = toHolidayKey(dayObj.month, dayObj.day);
@@ -35,21 +35,18 @@ const DayCell = memo(function DayCell({
   const isSelected = isStart || isEnd;
 
   // Range computation
-  const rangeEnd = endDate || hoveredDate;
+  // Without hoveredDate, range visuals purely rely on committed startDate/endDate.
   const [lo, hi] =
-    startDate && rangeEnd
-      ? startDate <= rangeEnd
-        ? [startDate, rangeEnd]
-        : [rangeEnd, startDate]
+    startDate && endDate
+      ? startDate <= endDate
+        ? [startDate, endDate]
+        : [endDate, startDate]
       : [null, null];
   const inRange = lo && hi && key > lo && key < hi;
 
   const isSat = index % 7 === 5;
   const isSun = index % 7 === 6;
   const isWeekend = isSat || isSun;
-
-  // Is this hover-previewing range (not yet committed)?
-  const isHoverPreview = startDate && !endDate && hoveredDate && key === hoveredDate;
 
   // ── Cell background ──
   let cellBg = isWeekend ? theme.weekendTint : 'transparent';
@@ -58,7 +55,7 @@ const DayCell = memo(function DayCell({
   if (inRange) {
     cellBg = theme.accentLight;
   }
-  if (isStart && rangeEnd && !isEnd) {
+  if (isStart && endDate && !isEnd) {
     cellStyle.background = `linear-gradient(to right, transparent 50%, ${theme.accentLight} 50%)`;
   } else if (isEnd && startDate && !isStart) {
     cellStyle.background = `linear-gradient(to left, transparent 50%, ${theme.accentLight} 50%)`;
@@ -90,25 +87,25 @@ const DayCell = memo(function DayCell({
   let dotColor = null;
   if (holiday) {
     const typeColor = HOLIDAY_TYPE_COLORS[holiday.type];
-    dotColor = typeColor || theme.accent; // festival type uses theme.accent
+    dotColor = typeColor || theme.accent;
     if (isSelected || isToday) dotColor = '#fff';
   }
 
   // ── Build cell class ──
   let cls = 'day-cell';
   if (inRange) cls += ' in-range';
-  if (isStart && rangeEnd && !isEnd) cls += ' range-start';
+  if (isStart && endDate && !isEnd) cls += ' range-start';
   if (isEnd && startDate && !isStart) cls += ' range-end';
-  if (isHoverPreview) cls += ' hover-preview';
   if (isWeekend) cls += ' weekend-col';
 
   return (
     <div
       className={cls}
       style={cellStyle}
+      data-datekey={key}
       onClick={() => onDayClick(key)}
       onMouseEnter={() => onDayHover(key)}
-      onMouseLeave={() => onDayHover(null)}
+      onMouseLeave={() => onDayLeave(key)}
     >
       <div className={numClass} style={numStyle}>
         {dayObj.day}
@@ -117,7 +114,7 @@ const DayCell = memo(function DayCell({
       {holiday && (
         <>
           <div className="holiday-dot" style={{ background: dotColor }} />
-          <span className="holiday-tip">{holiday.name}</span>
+          <div className="holiday-name">{holiday.name}</div>
         </>
       )}
 

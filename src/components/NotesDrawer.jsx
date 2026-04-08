@@ -52,9 +52,13 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
   useEffect(() => {
     if (!dateKey) return;
     try {
-      const saved = localStorage.getItem(`tag_${dateKey}`) || '';
-      setTags(saved ? saved.split(',') : []);
-    } catch { setTags([]); }
+      const saved = localStorage.getItem(`tag_${dateKey}`);
+      if (saved !== null) {
+        setTags(saved ? saved.split(',') : []);
+      } else {
+        setTags(['Personal']);
+      }
+    } catch { setTags(['Personal']); }
   }, [dateKey]);
 
   // Load reminders
@@ -155,9 +159,6 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
 
-  const accent = theme?.accent || '#4A90D9';
-  const textAccent = theme?.textAccent || '#7DB8F0';
-
   return (
     <>
       {/* Overlay */}
@@ -168,6 +169,9 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
 
       {/* Drawer */}
       <div className={`notes-drawer ${isOpen ? 'open' : ''}`}>
+        {/* Top Accent Border */}
+        <div className="drawer-top-border" />
+
         {/* Close button */}
         <button className="drawer-close" onClick={onClose} aria-label="Close drawer">
           ×
@@ -176,22 +180,19 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
         {/* Date Header */}
         <div className="drawer-date-header">
           <div className="drawer-day-number">{dateInfo.day}</div>
-          <div className="drawer-day-name" style={{ color: textAccent }}>
+          <div className="drawer-day-name">
             {dateInfo.dayName} · {dateInfo.monthName} {dateInfo.year}
           </div>
         </div>
 
         {/* Note Section */}
         <div className="drawer-section">
-          <div className="drawer-section-title" style={{ color: textAccent }}>NOTE</div>
+          <div className="drawer-section-title">NOTE</div>
           <textarea
             className="drawer-textarea"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Add a note for this day…"
-            style={{ '--focus-color': accent }}
-            onFocus={(e) => e.target.style.borderColor = accent}
-            onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
           />
         </div>
 
@@ -202,7 +203,6 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
               <button
                 key={tag}
                 className={`tag-pill ${tags.includes(tag) ? 'selected' : 'unselected'}`}
-                style={tags.includes(tag) ? { background: accent } : {}}
                 onClick={() => toggleTag(tag)}
               >
                 {tag}
@@ -213,7 +213,7 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
 
         {/* Reminder Section */}
         <div className="drawer-section">
-          <div className="drawer-section-title" style={{ color: textAccent }}>SET REMINDER</div>
+          <div className="drawer-section-title">SET REMINDER</div>
           <div className="reminder-row">
             <input
               type="time"
@@ -233,7 +233,6 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
           </div>
           <button
             className="reminder-set-btn"
-            style={{ background: accent }}
             onClick={scheduleReminder}
           >
             {reminderSet ? '✓ Reminder Set!' : 'Set Reminder'}
@@ -243,7 +242,7 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
         {/* Saved Reminders List */}
         {reminders.length > 0 && (
           <div className="drawer-section">
-            <div className="drawer-section-title" style={{ color: textAccent }}>REMINDERS</div>
+            <div className="drawer-section-title">REMINDERS</div>
             {reminders.map((r) => (
               <div key={r.id} className="reminder-pill">
                 <span className="reminder-pill-time">{r.time}</span>
@@ -261,16 +260,14 @@ export default function NotesDrawer({ dateKey, isOpen, onClose, theme }) {
         )}
 
         {/* Sticky Save Button */}
-        <button
-          className={`drawer-save-btn ${noteSaved ? 'saved' : ''}`}
-          style={{
-            border: `1px solid ${noteSaved ? '#4CAF50' : accent}`,
-            color: noteSaved ? '#4CAF50' : accent,
-          }}
-          onClick={saveNote}
-        >
-          {noteSaved ? 'Saved ✓' : 'Save Note'}
-        </button>
+        <div className="drawer-save-wrapper">
+          <button
+            className={`drawer-save-btn ${noteSaved ? 'saved' : ''}`}
+            onClick={saveNote}
+          >
+            {noteSaved ? 'Saved ✓' : 'Save Note'}
+          </button>
+        </div>
       </div>
     </>
   );
