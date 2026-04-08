@@ -2,27 +2,40 @@
  * Month Theme System
  * Each month has a unique visual identity with full color palette,
  * particle type, and mood classification.
- * Background images served from /images/ directory.
+ * Background images served from static imports.
  */
 
-const MONTH_IMAGE_FILES = [
-  '/images/jan.png',    // 0 - January
-  '/images/feb.png',    // 1 - February
-  '/images/mar.png',    // 2 - March
-  '/images/april.png',  // 3 - April
-  '/images/may.png',    // 4 - May
-  '/images/june.png',   // 5 - June
-  '/images/july.png',   // 6 - July
-  '/images/aug.png',    // 7 - August
-  '/images/sept.png',   // 8 - September
-  '/images/oct.png',    // 9 - October
-  '/images/nov.png',    // 10 - November
-  '/images/dec.png',    // 11 - December
+import janImg  from '../../images/jan.png'
+import febImg  from '../../images/feb.png'
+import marImg  from '../../images/mar.png'
+import aprImg  from '../../images/april.png'
+import mayImg  from '../../images/may.png'
+import junImg  from '../../images/june.png'
+import julImg  from '../../images/july.png'
+import augImg  from '../../images/aug.png'
+import sepImg  from '../../images/sept.png'
+import octImg  from '../../images/oct.png'
+import novImg  from '../../images/nov.png'
+import decImg  from '../../images/dec.png'
+
+const MONTH_IMAGES = [
+  janImg,   // January
+  febImg,   // February
+  marImg,   // March
+  aprImg,   // April
+  mayImg,   // May
+  junImg,   // June
+  julImg,   // July
+  augImg,   // August
+  sepImg,   // September
+  octImg,   // October
+  novImg,   // November
+  decImg,   // December
 ];
 
 export const MONTH_THEMES = {
   0: { // January
-    bgImage: MONTH_IMAGE_FILES[0],
+    bgImage: MONTH_IMAGES[0],
     accent: '#4A90D9',
     accentLight: 'rgba(74,144,217,0.15)',
     gradient: 'linear-gradient(135deg, #1a2a4a, #2d5a8e)',
@@ -33,7 +46,7 @@ export const MONTH_THEMES = {
     headerMood: 'cold',
   },
   1: { // February
-    bgImage: MONTH_IMAGE_FILES[1],
+    bgImage: MONTH_IMAGES[1],
     accent: '#E8789A',
     accentLight: 'rgba(232,120,154,0.15)',
     gradient: 'linear-gradient(135deg, #3d1a2a, #7a3050)',
@@ -44,7 +57,7 @@ export const MONTH_THEMES = {
     headerMood: 'romantic',
   },
   2: { // March - Holi
-    bgImage: MONTH_IMAGE_FILES[2],
+    bgImage: MONTH_IMAGES[2],
     accent: '#E85D9A',
     accentLight: 'rgba(232,93,154,0.15)',
     gradient: 'linear-gradient(135deg, #2a0a3a, #5a1a7a)',
@@ -55,7 +68,7 @@ export const MONTH_THEMES = {
     headerMood: 'festive',
   },
   3: { // April
-    bgImage: MONTH_IMAGE_FILES[3],
+    bgImage: MONTH_IMAGES[3],
     accent: '#4CAF7D',
     accentLight: 'rgba(76,175,125,0.15)',
     gradient: 'linear-gradient(135deg, #0d2a1a, #1a5c35)',
@@ -66,7 +79,7 @@ export const MONTH_THEMES = {
     headerMood: 'fresh',
   },
   4: { // May
-    bgImage: MONTH_IMAGE_FILES[4],
+    bgImage: MONTH_IMAGES[4],
     accent: '#F5A623',
     accentLight: 'rgba(245,166,35,0.15)',
     gradient: 'linear-gradient(135deg, #2a1a00, #5c3a00)',
@@ -77,7 +90,7 @@ export const MONTH_THEMES = {
     headerMood: 'warm',
   },
   5: { // June
-    bgImage: MONTH_IMAGE_FILES[5],
+    bgImage: MONTH_IMAGES[5],
     accent: '#2196F3',
     accentLight: 'rgba(33,150,243,0.15)',
     gradient: 'linear-gradient(135deg, #001a3a, #003d7a)',
@@ -88,7 +101,7 @@ export const MONTH_THEMES = {
     headerMood: 'ocean',
   },
   6: { // July - Monsoon
-    bgImage: MONTH_IMAGE_FILES[6],
+    bgImage: MONTH_IMAGES[6],
     accent: '#546E7A',
     accentLight: 'rgba(84,110,122,0.15)',
     gradient: 'linear-gradient(135deg, #0a1a20, #1a3a48)',
@@ -99,7 +112,7 @@ export const MONTH_THEMES = {
     headerMood: 'monsoon',
   },
   7: { // August - Independence
-    bgImage: MONTH_IMAGE_FILES[7],
+    bgImage: MONTH_IMAGES[7],
     accent: '#FF9933',
     accentLight: 'rgba(255,153,51,0.15)',
     gradient: 'linear-gradient(135deg, #1a0f00, #138808)',
@@ -110,7 +123,7 @@ export const MONTH_THEMES = {
     headerMood: 'patriotic',
   },
   8: { // September
-    bgImage: MONTH_IMAGE_FILES[8],
+    bgImage: MONTH_IMAGES[8],
     accent: '#D4843A',
     accentLight: 'rgba(212,132,58,0.15)',
     gradient: 'linear-gradient(135deg, #2a1500, #5c3300)',
@@ -121,7 +134,7 @@ export const MONTH_THEMES = {
     headerMood: 'harvest',
   },
   9: { // October - Diwali
-    bgImage: MONTH_IMAGE_FILES[9],
+    bgImage: MONTH_IMAGES[9],
     accent: '#F4C430',
     accentLight: 'rgba(244,196,48,0.15)',
     gradient: 'linear-gradient(135deg, #1a0f00, #3d2400)',
@@ -132,7 +145,7 @@ export const MONTH_THEMES = {
     headerMood: 'diwali',
   },
   10: { // November
-    bgImage: MONTH_IMAGE_FILES[10],
+    bgImage: MONTH_IMAGES[10],
     accent: '#8E6BAE',
     accentLight: 'rgba(142,107,174,0.15)',
     gradient: 'linear-gradient(135deg, #1a0f2a, #3a2458)',
@@ -143,7 +156,7 @@ export const MONTH_THEMES = {
     headerMood: 'misty',
   },
   11: { // December
-    bgImage: MONTH_IMAGE_FILES[11],
+    bgImage: MONTH_IMAGES[11],
     accent: '#C5A028',
     accentLight: 'rgba(197,160,40,0.15)',
     gradient: 'linear-gradient(135deg, #060d1a, #0d1f3c)',
