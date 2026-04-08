@@ -1,0 +1,131 @@
+import { memo } from 'react';
+import { toDateKey, toHolidayKey } from '../utils/calendar';
+import { HOLIDAYS, HOLIDAY_TYPE_COLORS } from '../data/holidays';
+
+/**
+ * DayCell — renders a single day in the calendar grid.
+ * Features:
+ *   - Top-left date number positioning
+ *   - Today/selected filled circle (theme.todayBg)
+ *   - Range selection with half-cell tinting
+ *   - Holiday dots colored by type
+ *   - Note indicator dot
+ *   - Weekend column tinting
+ *   - Hover preview dashed border during range selection
+ */
+const DayCell = memo(function DayCell({
+  dayObj,
+  index,
+  startDate,
+  endDate,
+  hoveredDate,
+  todayKey,
+  theme,
+  hasNote,
+  onDayClick,
+  onDayHover,
+}) {
+  const key = toDateKey(dayObj.year, dayObj.month, dayObj.day);
+  const holidayKey = toHolidayKey(dayObj.month, dayObj.day);
+  const holiday = dayObj.isCurrentMonth ? HOLIDAYS[holidayKey] : null;
+
+  const isToday = dayObj.isCurrentMonth && key === todayKey;
+  const isStart = startDate === key;
+  const isEnd = endDate === key;
+  const isSelected = isStart || isEnd;
+
+  // Range computation
+  const rangeEnd = endDate || hoveredDate;
+  const [lo, hi] =
+    startDate && rangeEnd
+      ? startDate <= rangeEnd
+        ? [startDate, rangeEnd]
+        : [rangeEnd, startDate]
+      : [null, null];
+  const inRange = lo && hi && key > lo && key < hi;
+
+  const isSat = index % 7 === 5;
+  const isSun = index % 7 === 6;
+  const isWeekend = isSat || isSun;
+
+  // Is this hover-previewing range (not yet committed)?
+  const isHoverPreview = startDate && !endDate && hoveredDate && key === hoveredDate;
+
+  // ── Cell background ──
+  let cellBg = isWeekend ? theme.weekendTint : 'transparent';
+  let cellStyle = {};
+
+  if (inRange) {
+    cellBg = theme.accentLight;
+  }
+  if (isStart && rangeEnd && !isEnd) {
+    cellStyle.background = `linear-gradient(to right, transparent 50%, ${theme.accentLight} 50%)`;
+  } else if (isEnd && startDate && !isStart) {
+    cellStyle.background = `linear-gradient(to left, transparent 50%, ${theme.accentLight} 50%)`;
+  } else {
+    cellStyle.background = cellBg;
+  }
+
+  // ── Day number styling ──
+  const showCircle = isToday || isSelected;
+  let numClass = 'day-number';
+  if (!dayObj.isCurrentMonth) numClass += ' adjacent';
+  if (showCircle) {
+    numClass += isToday && !isSelected ? ' today-circle' : ' selected-circle';
+  }
+  if (inRange && !isSelected) numClass += ' in-range-text';
+  if (isWeekend && dayObj.isCurrentMonth && !showCircle) numClass += ' weekend-text';
+
+  let numStyle = {};
+  if (showCircle) {
+    numStyle.background = theme.todayBg;
+    numStyle.color = '#fff';
+  } else if (inRange) {
+    numStyle.color = theme.textAccent;
+  } else if (isWeekend && dayObj.isCurrentMonth) {
+    numStyle.color = theme.textAccent;
+  }
+
+  // ── Holiday dot color ──
+  let dotColor = null;
+  if (holiday) {
+    const typeColor = HOLIDAY_TYPE_COLORS[holiday.type];
+    dotColor = typeColor || theme.accent; // festival type uses theme.accent
+    if (isSelected || isToday) dotColor = '#fff';
+  }
+
+  // ── Build cell class ──
+  let cls = 'day-cell';
+  if (inRange) cls += ' in-range';
+  if (isStart && rangeEnd && !isEnd) cls += ' range-start';
+  if (isEnd && startDate && !isStart) cls += ' range-end';
+  if (isHoverPreview) cls += ' hover-preview';
+  if (isWeekend) cls += ' weekend-col';
+
+  return (
+    <div
+      className={cls}
+      style={cellStyle}
+      onClick={() => onDayClick(key)}
+      onMouseEnter={() => onDayHover(key)}
+      onMouseLeave={() => onDayHover(null)}
+    >
+      <div className={numClass} style={numStyle}>
+        {dayObj.day}
+      </div>
+
+      {holiday && (
+        <>
+          <div className="holiday-dot" style={{ background: dotColor }} />
+          <span className="holiday-tip">{holiday.name}</span>
+        </>
+      )}
+
+      {hasNote && !holiday && (
+        <div className="note-indicator" />
+      )}
+    </div>
+  );
+});
+
+export default DayCell;
